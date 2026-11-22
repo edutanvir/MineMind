@@ -1,0 +1,15 @@
+streamlit
+pandas
+numpy
+geopandas
+pyogrio
+shapely
+pyproj
+plotly
+folium
+streamlit-folium
+duckdb
+pyarrow
+google-genai
+python-dotenv
+pytest
