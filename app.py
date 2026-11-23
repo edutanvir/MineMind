@@ -431,3 +431,15 @@ st.caption(
     "Mineral production statistics: Statistics Canada, "
     "Table 16-10-0019-01."
 )
+
+
+st.markdown(
+    """
+    <div style="text-align:center; padding:20px; opacity:0.65;">
+        © 2026 Md Tanvir Ahmed. All Rights Reserved.
+        <br>
+        MineMind — Proprietary Software
+    </div>
+    """,
+    unsafe_allow_html=True
+)
