@@ -1,0 +1,12 @@
+# Runtime only (no geopandas/pyogrio: the pipeline is not run in the container).
+# Pin these to your local versions: see the grep command in README.md.
+streamlit
+pandas
+numpy
+pyarrow
+duckdb
+plotly
+folium
+streamlit-folium
+google-genai
+python-dotenv

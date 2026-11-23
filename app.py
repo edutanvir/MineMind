@@ -2,7 +2,9 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 
+from src.analytics.mine_queries import with_primary_commodity
 from src.database.duckdb_manager import get_duckdb_connection
+from src.ui.theme import inject_css
 
 
 # --------------------------------------------------
@@ -15,6 +17,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+inject_css()
 
 
 # --------------------------------------------------
@@ -82,7 +86,7 @@ def load_source_manifest():
 # --------------------------------------------------
 
 try:
-    mines = load_mine_data()
+    mines = with_primary_commodity(load_mine_data())
     production = load_production_data()
     sources = load_source_manifest()
 
@@ -157,14 +161,6 @@ measure_options = sorted(
 
 month_options = sorted(
     production["reference_month"].dropna().unique()
-)
-
-# Province slicer
-selected_provinces = st.sidebar.multiselect(
-    "Province / Territory",
-    options=province_options,
-    default=province_options,
-    key="global_provinces",
 )
 
 # Commodity slicer

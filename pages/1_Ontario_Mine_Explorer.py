@@ -6,18 +6,36 @@ import plotly.express as px
 import streamlit as st
 from streamlit_folium import st_folium
 
+from src.analytics.mine_queries import with_primary_commodity
 from src.database.duckdb_manager import get_duckdb_connection
+from src.ui.theme import inject_css
 
 
 # --------------------------------------------------
 # PAGE CONFIGURATION
 # --------------------------------------------------
 
+# --------------------------------------------------
+# DYNAMIC PAGE CONFIGURATION
+# --------------------------------------------------
+
+current_province = st.session_state.get(
+    "mine_province",
+    "All Provinces",
+)
+
+if current_province == "All Provinces":
+    explorer_title = "Canadian Mine Explorer"
+else:
+    explorer_title = f"{current_province} Mine Explorer"
+
 st.set_page_config(
-    page_title="MineMind | Ontario Mine Explorer",
+    page_title=f"MineMind | {explorer_title}",
     page_icon="⛏️",
     layout="wide",
 )
+
+inject_css()
 
 
 # --------------------------------------------------
@@ -45,7 +63,7 @@ def load_table(table_name):
 
 
 try:
-    mines = load_table("dim_mine_feature")
+    mines = with_primary_commodity(load_table("dim_mine_feature"))
     production = load_table("fact_mineral_production_monthly")
 
 except Exception as error:
@@ -72,18 +90,18 @@ all_mines["longitude"] = pd.to_numeric(
 # PAGE HEADER
 # --------------------------------------------------
 
-st.title("Ontario Mine Explorer")
+st.title(explorer_title)
 
 st.markdown(
-    "Explore mapped Ontario mine and facility features, "
-    "and examine Ontario's monthly mineral production "
-    "and value-of-shipments statistics."
+    f"Explore mapped {current_province.lower() if current_province != 'All Provinces' else 'Canadian'} "
+    "mine and facility features, and examine monthly mineral "
+    "production and value-of-shipments statistics."
 )
 
 st.info(
     "The mine map uses Natural Resources Canada features. "
     "Production and shipment statistics come from Statistics "
-    "Canada and represent Ontario as a whole—not individual mines."
+    f"Canada and represent {current_province.lower() if current_province != 'All Provinces' else 'Canadian'} as a whole—not individual mines."
 )
 
 st.divider()
@@ -151,28 +169,46 @@ if selected_city != "All Cities":
         province_mines["city"].eq(selected_city)
     ].copy()
 
+# --------------------------------------------------
+# PROVINCE-SPECIFIC COMMODITY FILTER
+# --------------------------------------------------
+
 commodity_options = sorted(
     province_mines["commodity_normalized"]
     .dropna()
     .unique()
 )
 
-selected_commodities = st.sidebar.multiselect(
-    "Commodity",
-    commodity_options,
-    default=commodity_options,
-    key="mine_commodities",
+commodity_filter_key = (
+    f"mine_commodities_{selected_province}_{selected_city}"
 )
 
+selected_commodities = st.sidebar.multiselect(
+    "Commodity",
+    options=commodity_options,
+    default=commodity_options,
+    key=commodity_filter_key,
+)
+
+# --------------------------------------------------
+# PROVINCE-SPECIFIC FEATURE TYPE FILTER
+# --------------------------------------------------
+
 feature_options = sorted(
-    province_mines["feature_type"].dropna().unique()
+    province_mines["feature_type"]
+    .dropna()
+    .unique()
+)
+
+feature_filter_key = (
+    f"mine_features_{selected_province}_{selected_city}"
 )
 
 selected_features = st.sidebar.multiselect(
     "Feature Type",
-    feature_options,
+    options=feature_options,
     default=feature_options,
-    key="mine_feature_types",
+    key=feature_filter_key,
 )
 
 filtered_mines = province_mines[
@@ -276,8 +312,8 @@ else:
         )
 
         commodity = html.escape(
-            str(mine["commodity_normalized"])
-            if pd.notna(mine["commodity_normalized"])
+            str(mine["commodity_raw"])
+            if pd.notna(mine["commodity_raw"])
             else "Not available"
         )
 
@@ -351,13 +387,18 @@ else:
 
 st.divider()
 
-st.subheader("Ontario Mine Feature Details")
+st.subheader(
+    f"{current_province} Mine Feature Details"
+    if current_province != "All Provinces"
+    else "Canadian Mine Feature Details"
+)
 
 detail_columns = [
     "feature_name",
     "operator_name",
     "city",
     "commodity_normalized",
+    "commodity_raw",
     "feature_type",
     "facilities_type",
     "latitude",
@@ -380,12 +421,16 @@ st.dataframe(
 
 st.divider()
 
-st.title("Ontario Mineral Production and Shipments")
+st.title(
+    f"{current_province} Mineral Production and Shipments"
+    if current_province != "All Provinces"
+    else "Canadian Mineral Production and Shipments"
+)
 
 st.markdown(
-    "Explore Ontario's reported monthly mineral statistics. "
-    "Choose one exact statistical series to avoid mixing "
-    "different mineral products or measurement units."
+    f"Explore {current_province.lower() if current_province != 'All Provinces' else 'Canadian'}'s reported monthly mineral statistics. "
+    f"Choose one exact statistical series to avoid mixing "
+    f"different mineral products or measurement units."
 )
 
 # --------------------------------------------------
@@ -408,15 +453,44 @@ if province_production.empty:
     st.stop()
 
 
+
 # --------------------------------------------------
-# PRODUCTION FILTERS
+# PRODUCTION FILTERS — DATA-AWARE CASCADING FILTERS
 # --------------------------------------------------
 
 st.sidebar.divider()
-st.sidebar.header("Ontario Production Filters")
+st.sidebar.header(f"{selected_province} Production Filters")
+
+# Only measures with actual numerical observations
+usable_production = province_production[
+    province_production["value"].notna() & province_production["value"].ne(0)
+].copy()
+
+measure_summary = (
+    usable_production
+    .groupby("measure")
+    .agg(
+        available_observations=("value", "count")
+    )
+    .reset_index()
+)
 
 measure_options = sorted(
-    province_production["measure"].dropna().unique()
+    measure_summary["measure"].unique()
+)
+
+if not measure_options:
+    st.warning(
+        f"No numerical production observations are available "
+        f"for {selected_province}."
+    )
+    st.stop()
+
+measure_counts = dict(
+    zip(
+        measure_summary["measure"],
+        measure_summary["available_observations"],
+    )
 )
 
 default_measure = (
@@ -427,34 +501,104 @@ default_measure = (
 
 selected_measure = st.sidebar.selectbox(
     "Statistical Measure",
-    measure_options,
+    options=measure_options,
     index=measure_options.index(default_measure),
+    format_func=lambda x: (
+        f"{x} ({measure_counts[x]:,} observations)"
+    ),
 )
 
+# Preserve all records for the selected measure,
+# including missing values for data-quality analysis.
 measure_data = province_production[
     province_production["measure"].eq(selected_measure)
 ].copy()
 
-commodity_options = sorted(
-    measure_data["commodity"].dropna().unique()
+
+# --------------------------------------------------
+# COMMODITY FILTER — ONLY COMMODITIES WITH DATA
+# --------------------------------------------------
+
+commodity_summary = (
+    measure_data
+    .dropna(subset=["value"])
+    .loc[lambda df: df["value"].ne(0)]
+    .groupby("commodity")
+    .agg(
+        available_observations=("value", "count"),
+        first_month=("reference_month", "min"),
+        latest_month=("reference_month", "max"),
+    )
+    .reset_index()
+)
+
+commodity_summary = commodity_summary.sort_values(
+    "commodity"
+)
+
+commodity_options = commodity_summary["commodity"].tolist()
+
+if not commodity_options:
+    st.warning(
+        f"No commodities have numerical observations for "
+        f"{selected_province} under {selected_measure}."
+    )
+    st.stop()
+
+commodity_counts = dict(
+    zip(
+        commodity_summary["commodity"],
+        commodity_summary["available_observations"],
+    )
 )
 
 selected_commodity = st.sidebar.selectbox(
     "Production Commodity",
-    commodity_options,
+    options=commodity_options,
+    format_func=lambda x: (
+        f"{x} ({commodity_counts[x]:,} observations)"
+    ),
 )
 
 commodity_data = measure_data[
     measure_data["commodity"].eq(selected_commodity)
 ].copy()
 
-unit_options = sorted(
-    commodity_data["unit"].dropna().unique()
+
+# --------------------------------------------------
+# MEASUREMENT UNIT — ONLY UNITS WITH DATA
+# --------------------------------------------------
+
+unit_summary = (
+    commodity_data
+    .dropna(subset=["value"])
+    .loc[lambda df: df["value"].ne(0)]
+    .groupby("unit")
+    .agg(
+        available_observations=("value", "count")
+    )
+    .reset_index()
+)
+
+unit_options = sorted(unit_summary["unit"].unique())
+
+if not unit_options:
+    st.warning("No measurement units have available numerical data.")
+    st.stop()
+
+unit_counts = dict(
+    zip(
+        unit_summary["unit"],
+        unit_summary["available_observations"],
+    )
 )
 
 selected_unit = st.sidebar.selectbox(
     "Measurement Unit",
-    unit_options,
+    options=unit_options,
+    format_func=lambda x: (
+        f"{x} ({unit_counts[x]:,} observations)"
+    ),
 )
 
 unit_data = commodity_data[
@@ -473,7 +617,10 @@ series_columns = [
 ]
 
 available_series = (
-    unit_data[series_columns]
+    unit_data[
+        unit_data["value"].notna()
+        & unit_data["value"].ne(0)
+    ][series_columns]
     .drop_duplicates()
     .sort_values(
         series_columns,
@@ -568,7 +715,7 @@ filtered_production = filtered_production.sort_values(
 # PRODUCTION SERIES INFORMATION
 # --------------------------------------------------
 
-st.subheader("Selected Ontario Statistical Series")
+st.subheader(f"Selected {current_province} Statistical Series")
 
 st.caption(
     f"Commodity: {selected_commodity} | "
@@ -664,7 +811,7 @@ else:
 
 st.divider()
 
-st.subheader("Ontario Monthly Trend")
+st.subheader(f"{current_province} Monthly Trend")
 
 if filtered_production.empty:
     st.warning("No observations match the selected filters.")
@@ -706,7 +853,7 @@ else:
 # MONTHLY OBSERVATION DETAILS
 # --------------------------------------------------
 
-st.subheader("Ontario Monthly Observation Details")
+st.subheader(f"{current_province} Monthly Observation Details")
 
 display_columns = [
     "reference_month",

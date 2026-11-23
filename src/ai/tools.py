@@ -1,11 +1,14 @@
-"""src/ai/tools.py - the only functions Gemini is allowed to call (read-only)."""
+"""src/ai/tools.py - the only functions Gemini is allowed to call (read-only, parameterized SQL)."""
 import functools
 
 import duckdb
 
 DB_PATH = "data/minemind.duckdb"
 MAX_ROWS = 50
+MAX_TREND_ROWS = 600
 PLACES = {"sudbury": (46.49, -81.01), "timmins": (48.48, -81.33)}  # approximate town centres
+PRODUCT_FORMS = ("concentrates", "recoverable", "refined")
+TO_TONNES = {"Kilograms": 0.001, "Grams": 0.000001, "Metric tonnes": 1.0}
 
 NRCAN = {
     "dataset": "NRCan Map 900A (Principal Mineral Areas, Producing Mines, and Oil and Gas Fields)",
@@ -15,19 +18,27 @@ NRCAN = {
 STATCAN = {
     "dataset": "Statistics Canada Table 16-10-0019-01",
     "licence": "Statistics Canada Open Licence",
-    "caveat": "Provincial totals, not mine-level. Recent months can be revised. Suppressed values are not zero.",
+    "caveat": ("Provincial totals, not mine-level. Recent months can be revised. "
+               "Concentrates, recoverable and refined are different series: never add them. "
+               "'..' means not available and 'x' means suppressed; neither is zero."),
 }
 
-CALL_LOG: list[dict] = []  # the Streamlit page reads this to show "Tools used"
+CALL_LOG: list[dict] = []  # legacy global log; the app uses tool_set(log) instead
+_LOG_CAP = 200
+
+
+def _row_count(result: dict) -> int:
+    return len(result.get("rows") or [])
 
 
 def logged(fn):
-    """Record every call (name, arguments, row count) so the UI can display it."""
+    """Record every call (name, arguments, row count)."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         result = fn(*args, **kwargs)
         CALL_LOG.append({"tool": fn.__name__, "args": kwargs,
-                         "rows": len(result.get("rows", [])), "error": result.get("error")})
+                         "rows": _row_count(result), "error": result.get("error")})
+        del CALL_LOG[:-_LOG_CAP]
         return result
     return wrapper
 
@@ -49,217 +60,114 @@ def _distinct(column: str) -> tuple:
     return tuple(r["v"] for r in rows)
 
 
-
-def _production_series(geography: str, commodity: str, measure: str,
-                       start_month: str = "", end_month: str = "") -> list[dict]:
-    """Return available statistical series for a geography, commodity and measure."""
-    where = [
-        "lower(geography) = lower(?)",
-        "lower(commodity) = lower(?)",
-        "measure = ?",
-    ]
-    params = [geography.strip(), commodity.strip(), measure]
-
-    if start_month:
-        where.append("reference_month >= ?")
-        params.append(start_month.strip())
-
-    if end_month:
-        where.append("reference_month <= ?")
-        params.append(end_month.strip())
-
-    return _query(
-        f"""
-        SELECT DISTINCT
-            commodity_raw AS series,
-            unit,
-            vector,
-            coordinate
-        FROM fact_mineral_production_monthly
-        WHERE {" AND ".join(where)}
-        ORDER BY series, unit
-        """,
-        params,
-    )
+def _summarize(series: str, vector, measure: str, points: list[dict]) -> dict:
+    """Numbers computed here in Python so the model never does arithmetic."""
+    reported = [p for p in points if p["value"] is not None]
+    missing = [p for p in points if p["value"] is None]
+    by_status: dict[str, int] = {}
+    for p in missing:
+        key = p["status_symbol"] or "unspecified"
+        by_status[key] = by_status.get(key, 0) + 1
+    out = {
+        "series": series, "vector": vector, "unit": points[0]["unit"],
+        "months_returned": len(points), "first_month": points[0]["month"],
+        "last_month": points[-1]["month"], "months_with_value": len(reported),
+        "months_reported_as_zero": sum(1 for p in reported if p["value"] == 0),
+        "months_missing": len(missing), "missing_by_status": by_status,
+    }
+    if reported:
+        nums = [p["value"] for p in reported]
+        latest = reported[-1]
+        out.update(latest_value_month=latest["month"], latest_value=latest["value"],
+                   minimum=min(nums), maximum=max(nums),
+                   average_of_reported_months=round(sum(nums) / len(nums), 3))
+        if measure != "Closing inventories":
+            out["total_of_reported_months"] = round(sum(nums), 3)
+        factor = TO_TONNES.get(out["unit"])
+        if factor is not None:
+            out["latest_value_tonnes"] = round(latest["value"] * factor, 3)
+            out["average_tonnes"] = round(out["average_of_reported_months"] * factor, 3)
+            if "total_of_reported_months" in out:
+                out["total_tonnes"] = round(out["total_of_reported_months"] * factor, 3)
+    return out
 
 
 @logged
 def get_production_trend(geography: str, commodity: str, measure: str,
                          last_n_months: int = 60, start_month: str = "",
-                         end_month: str = "", series: str = "",
-                         unit: str = "") -> dict:
-    """Return monthly production observations without mixing statistical series.
+                         end_month: str = "", product_form: str = "") -> dict:
+    """Return monthly Statistics Canada observations, oldest first, plus computed summaries.
+
+    One commodity can have several distinct series (concentrates, recoverable, refined).
+    Each series is labelled in `series` and summarised separately in `series_summary`.
+    Report series separately; never add them together.
 
     Args:
         geography: Province or "Canada", e.g. "Ontario".
-        commodity: Commodity name, e.g. "Nickel" or "Copper".
-        measure: Statistical measure, e.g. "Quantity produced".
-        last_n_months: Number of distinct calendar months (1-240).
+        commodity: Metal name, e.g. "Nickel" or "Copper".
+        measure: "Quantity produced", "Quantity shipped", "Closing inventories" or "Value of shipments".
+        last_n_months: Most recent months to return per series (1-240). Default 60.
         start_month: Optional first month, YYYY-MM.
         end_month: Optional last month, YYYY-MM.
-        series: Optional exact commodity_raw series, e.g.
-                "Nickel, concentrates (kilograms)".
-        unit: Optional exact unit to distinguish series.
+        product_form: Optional "concentrates", "recoverable" or "refined". Empty returns every series.
     """
-    match = [
-        m for m in _distinct("measure")
-        if m.lower() == measure.strip().lower()
-    ]
-
+    match = [m for m in _distinct("measure") if m.lower() == measure.strip().lower()]
     if not match:
-        return {
-            "error": "Unknown measure.",
-            "valid_measures": list(_distinct("measure")),
-            "rows": [],
-        }
+        return {"error": "Unknown measure.", "valid_measures": list(_distinct("measure")), "rows": []}
+    form = product_form.strip().lower()
+    if form and form not in PRODUCT_FORMS:
+        return {"error": "Unknown product_form.", "valid_product_forms": list(PRODUCT_FORMS), "rows": []}
 
-    measure = match[0]
-    available_series = _production_series(
-        geography, commodity, measure, start_month, end_month
-    )
-
-    if not available_series:
-        return {
-            "rows": [],
-            "note": "No matching production series were found.",
-            "valid_geographies": list(_distinct("geography")),
-            "valid_commodities": list(_distinct("commodity")),
-            "source": STATCAN,
-        }
-
-    # Apply optional series and unit selection.
-    candidates = available_series
-
-    if series.strip():
-        candidates = [
-            item for item in candidates
-            if item["series"].lower() == series.strip().lower()
-        ]
-
-    if unit.strip():
-        candidates = [
-            item for item in candidates
-            if item["unit"].lower() == unit.strip().lower()
-        ]
-
-    if not candidates:
-        return {
-            "error": "No production series matched the requested series and unit.",
-            "available_series": available_series,
-            "rows": [],
-            "source": STATCAN,
-        }
-
-    # Never silently combine different statistical series or units.
-    distinct_choices = {
-        (
-            item["series"],
-            item["unit"],
-            item["vector"],
-            item["coordinate"],
-        )
-        for item in candidates
-    }
-
-    if len(distinct_choices) > 1:
-        return {
-            "requires_series": True,
-            "note": (
-                "Multiple statistical series match this request. "
-                "Select one series, unit, and statistical identifier. "
-                "These series must not be combined."
-            ),
-            "available_series": candidates,
-            "rows": [],
-            "source": STATCAN,
-        }
-
-    selected = candidates[0]
-    selected_series = selected["series"]
-    selected_unit = selected["unit"]
-    selected_vector = selected["vector"]
-    selected_coordinate = selected["coordinate"]
-
-    where = [
-        "lower(geography) = lower(?)",
-        "lower(commodity) = lower(?)",
-        "measure = ?",
-        "commodity_raw = ?",
-        "unit = ?",
-        "vector IS NOT DISTINCT FROM ?",
-        "coordinate IS NOT DISTINCT FROM ?",
-    ]
-
-    params = [
-        geography.strip(),
-        commodity.strip(),
-        measure,
-        selected_series,
-        selected_unit,
-        selected_vector,
-        selected_coordinate,
-    ]
-
+    where = ["lower(geography) = lower(?)", "lower(commodity) = lower(?)", "measure = ?"]
+    params: list = [geography.strip(), commodity.strip(), match[0]]
+    if form:
+        where.append("lower(commodity_raw) LIKE '%' || lower(?) || '%'")
+        params.append(form)
     if start_month:
         where.append("reference_month >= ?")
         params.append(start_month.strip())
-
     if end_month:
         where.append("reference_month <= ?")
         params.append(end_month.strip())
-
     n = max(1, min(int(last_n_months), 240))
 
-    # First select the latest N DISTINCT months.
-    # Then return every observation for the selected series in those months.
-    rows = _query(
-        f"""
-        WITH matching_rows AS (
-            SELECT
-                reference_month,
-                commodity_raw,
-                CAST(value AS DOUBLE) AS value,
-                unit,
-                measure,
-                status_symbol,
-                symbol,
-                vector,
-                coordinate
-            FROM fact_mineral_production_monthly
-            WHERE {" AND ".join(where)}
-        ),
-        selected_months AS (
-            SELECT DISTINCT reference_month
-            FROM matching_rows
-            ORDER BY reference_month DESC
-            LIMIT ?
-        )
-        SELECT
-            mr.reference_month AS month,
-            mr.commodity_raw AS series,
-            mr.value,
-            mr.unit,
-            mr.measure,
-            mr.status_symbol,
-            mr.symbol,
-            mr.vector,
-            mr.coordinate
-        FROM matching_rows AS mr
-        INNER JOIN selected_months AS sm
-            ON mr.reference_month = sm.reference_month
-        ORDER BY mr.reference_month ASC
-        """,
-        params + [n],
-    )
+    fetched = _query(
+        f"""SELECT reference_month AS month, commodity_raw AS series, vector,
+                   CAST(value AS DOUBLE) AS value, unit, status_symbol
+            FROM (SELECT reference_month, commodity_raw, vector, value, unit, status_symbol,
+                         row_number() OVER (PARTITION BY commodity_raw, vector
+                                            ORDER BY reference_month DESC) AS rn
+                  FROM fact_mineral_production_monthly
+                  WHERE {" AND ".join(where)}) AS t
+            WHERE rn <= {n}
+            ORDER BY series, vector, month""", params)
 
-    return {
-        "rows": rows,
-        "series": selected_series,
-        "unit": selected_unit,
-        "months_requested": n,
-        "months_returned": len({row["month"] for row in rows}),
-        "source": STATCAN,
-    }
+    result: dict = {"source": STATCAN}
+    if not fetched:
+        result.update(rows=[], note="No rows matched. Retry with one of the valid values.",
+                      valid_geographies=list(_distinct("geography")),
+                      valid_commodities=list(_distinct("commodity")))
+        return result
+
+    grouped: dict[tuple, list[dict]] = {}
+    for r in fetched:
+        grouped.setdefault((r["series"], r["vector"]), []).append(r)
+    per_series_cap = max(1, MAX_TREND_ROWS // len(grouped))
+    truncated = any(len(v) > per_series_cap for v in grouped.values())
+
+    rows, summaries = [], []
+    for (series, vector), pts in grouped.items():
+        pts = pts[-per_series_cap:]
+        summaries.append(_summarize(series, vector, match[0], pts))
+        rows += [{"month": p["month"], "series": series, "value": p["value"],
+                  "unit": p["unit"], "status_symbol": p["status_symbol"]} for p in pts]
+    result.update(rows=rows, series_summary=summaries)
+    if len(summaries) > 1:
+        result["note"] = ("Several distinct series matched. Report each separately with its label "
+                          "and unit; never add them together.")
+    if truncated:
+        result["truncated"] = f"Only the latest {per_series_cap} months per series are shown."
+    return result
 
 
 @logged
@@ -319,3 +227,18 @@ def mines_near_place(place: str, radius_km: float = 50, limit: int = 15) -> dict
            WHERE km <= ? ORDER BY km""",
         [lat, lat, lon, radius_km])
     return {"total_within_radius": len(rows), "rows": rows[:limit], "source": NRCAN}
+
+
+def tool_set(log: list) -> list:
+    """Per-call copies of the tools that record into `log`. Safe when sessions run at once."""
+    def wrap(fn):
+        raw = fn.__wrapped__
+
+        @functools.wraps(raw)
+        def w(*args, **kwargs):
+            result = raw(*args, **kwargs)
+            log.append({"tool": raw.__name__, "args": kwargs,
+                        "rows": _row_count(result), "error": result.get("error")})
+            return result
+        return w
+    return [wrap(search_mines), wrap(get_production_trend), wrap(mines_near_place)]

@@ -4,6 +4,7 @@ import streamlit as st
 import plotly.express as px
 
 from src.database.duckdb_manager import get_duckdb_connection
+from src.ui.theme import inject_css
 
 
 # --------------------------------------------------
@@ -15,6 +16,8 @@ st.set_page_config(
     page_icon="📊",
     layout="wide",
 )
+
+inject_css()
 
 
 # --------------------------------------------------
@@ -55,6 +58,7 @@ st.markdown(
 st.divider()
 
 
+
 # --------------------------------------------------
 # FILTERS
 # --------------------------------------------------
@@ -82,9 +86,25 @@ province_data = production[
     production["geography"] == selected_province
 ].copy()
 
+
+# --------------------------------------------------
+# STATISTICAL MEASURE
+# --------------------------------------------------
+
 measure_options = sorted(
-    province_data["measure"].dropna().unique()
+    province_data.loc[
+        province_data["value"].notna()
+        & province_data["value"].gt(0),
+        "measure",
+    ].dropna().unique()
 )
+
+if not measure_options:
+    st.warning(
+        "No statistical measures with positive observations "
+        "are available for this province."
+    )
+    st.stop()
 
 selected_measure = st.sidebar.selectbox(
     "Statistical Measure",
@@ -96,11 +116,24 @@ measure_data = province_data[
 ].copy()
 
 
-# Commodity selection
+# --------------------------------------------------
+# COMMODITY — EXCLUDE ZERO-ONLY SERIES
+# --------------------------------------------------
 
 commodity_options = sorted(
-    measure_data["commodity"].dropna().unique()
+    measure_data.loc[
+        measure_data["value"].notna()
+        & measure_data["value"].gt(0),
+        "commodity",
+    ].dropna().unique()
 )
+
+if not commodity_options:
+    st.warning(
+        "No commodities with positive observations are available "
+        "for this province and measure."
+    )
+    st.stop()
 
 selected_commodity = st.sidebar.selectbox(
     "Commodity",
@@ -112,11 +145,24 @@ commodity_data = measure_data[
 ].copy()
 
 
-# Unit selection
+# --------------------------------------------------
+# UNIT
+# --------------------------------------------------
 
 unit_options = sorted(
-    commodity_data["unit"].dropna().unique()
+    commodity_data.loc[
+        commodity_data["value"].notna()
+        & commodity_data["value"].gt(0),
+        "unit",
+    ].dropna().unique()
 )
+
+if not unit_options:
+    st.warning(
+        "No units with positive observations are available "
+        "for this commodity."
+    )
+    st.stop()
 
 selected_unit = st.sidebar.selectbox(
     "Unit",
@@ -138,8 +184,13 @@ series_columns = [
     "coordinate",
 ]
 
+positive_series = unit_data[
+    unit_data["value"].notna()
+    & unit_data["value"].gt(0)
+]
+
 available_series = (
-    unit_data[series_columns]
+    positive_series[series_columns]
     .drop_duplicates()
     .sort_values(
         ["commodity_raw", "vector", "coordinate"],
@@ -163,6 +214,13 @@ def format_series(series):
     )
 
 
+if not series_options:
+    st.warning(
+        "No exact statistical series with positive observations "
+        "are available."
+    )
+    st.stop()
+
 selected_series = st.sidebar.selectbox(
     "Exact Statistical Series",
     series_options,
@@ -170,13 +228,24 @@ selected_series = st.sidebar.selectbox(
 )
 
 
-# Filter using every series identifier.
+# --------------------------------------------------
+# FILTER USING EXACT SERIES IDENTIFIERS
+# --------------------------------------------------
+
 selected_raw, selected_vector, selected_coordinate = selected_series
 
+
+def matches_value(series, selected_value):
+    if pd.isna(selected_value):
+        return series.isna()
+
+    return series.eq(selected_value)
+
+
 series_data = unit_data[
-    unit_data["commodity_raw"].eq(selected_raw)
-    & unit_data["vector"].eq(selected_vector)
-    & unit_data["coordinate"].eq(selected_coordinate)
+    matches_value(unit_data["commodity_raw"], selected_raw)
+    & matches_value(unit_data["vector"], selected_vector)
+    & matches_value(unit_data["coordinate"], selected_coordinate)
 ].copy()
 
 
