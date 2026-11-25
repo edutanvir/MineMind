@@ -33,7 +33,10 @@ if "chat" not in st.session_state:
     st.session_state.asked = 0
 
 if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
-    st.error("GEMINI_API_KEY is not set. Add it to .env (local) or Secret Manager (Cloud Run).")
+    st.error(
+    "GEMINI_API_KEY is not configured. "
+    "Configure it as an environment secret in your deployment settings."
+            )
     st.stop()
 
 
