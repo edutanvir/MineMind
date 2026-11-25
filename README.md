@@ -74,11 +74,10 @@ Map 900A shows significant mapped features only. Statistics Canada values are pr
 
 ---
 
-## Copyright and License
+## Copyright, Ownership and Proprietary License
 
 Copyright © 2026 Md Tanvir Ahmed. All Rights Reserved.
 
-MineMind is proprietary software. Unauthorized copying, modification,
-redistribution, deployment, or commercial use is prohibited.
+MineMind is proprietary software and an independently developed intellectual property project owned by Md Tanvir Ahmed, except for third-party components, open-source software, datasets, and other materials that remain subject to their respective ownership rights and licenses.
 
 See the [LICENSE](LICENSE) file for details.
