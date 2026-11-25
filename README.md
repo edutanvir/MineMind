@@ -70,3 +70,15 @@ BigQuery (the Gold tables are small enough for DuckDB), Cloud Storage and Cloud 
 
 ## Known limitations
 Map 900A shows significant mapped features only. Statistics Canada values are provincial and may be revised. The commodity shown on the map is the first one listed in the source record.
+
+
+---
+
+## Copyright and License
+
+Copyright © 2026 Md Tanvir Ahmed. All Rights Reserved.
+
+MineMind is proprietary software. Unauthorized copying, modification,
+redistribution, deployment, or commercial use is prohibited.
+
+See the [LICENSE](LICENSE) file for details.
