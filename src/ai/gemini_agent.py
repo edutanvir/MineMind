@@ -36,6 +36,7 @@ SYSTEM = (
 _client = None
 
 
+
 def _get_client():
     global _client
 
@@ -45,18 +46,28 @@ def _get_client():
         if not api_key:
             raise ValueError("Gemini API key is missing.")
 
-        _client = genai.Client(api_key=api_key)
+        _client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                timeout=30000
+            ),
+        )
 
     return _client
 
 
+
 def ask(question: str) -> dict:
-    """Return {"answer", "tool_calls", "ok", "model"}. The tool log is private to this call."""
+    """Return answer, tool_calls, ok and model."""
     log: list[dict] = []
-    code = None
-    for model in [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]:
+    last_code = None
+
+    models = [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]
+
+    for model in models:
         for attempt in range(len(RETRY_DELAYS) + 1):
             log.clear()
+
             try:
                 response = _get_client().models.generate_content(
                     model=model,
@@ -66,17 +77,43 @@ def ask(question: str) -> dict:
                         tools=tools.tool_set(log),
                     ),
                 )
-                answer = response.text or "Gemini returned no text. Try rephrasing the question."
-                return {"answer": answer, "tool_calls": log, "ok": True, "model": model}
+
+                answer = response.text or (
+                    "Gemini returned no text. Try rephrasing the question."
+                )
+
+                return {
+                    "answer": answer,
+                    "tool_calls": log.copy(),
+                    "ok": True,
+                    "model": model,
+                }
+
             except errors.APIError as e:
-                code = getattr(e, "code", None)
-                if code not in RETRY_CODES:
-                    return {"answer": f"Gemini API error ({code}). Please try again.",
-                            "tool_calls": [], "ok": False, "model": model}
+                last_code = getattr(e, "code", None)
+
+                if last_code not in RETRY_CODES:
+                    return {
+                        "answer": f"Gemini API error ({last_code}). Please try again.",
+                        "tool_calls": [],
+                        "ok": False,
+                        "model": model,
+                    }
+
                 if attempt < len(RETRY_DELAYS):
                     time.sleep(RETRY_DELAYS[attempt])
-            except ValueError:
-                return {"answer": "Gemini is not configured: set GEMINI_API_KEY.",
-                        "tool_calls": [], "ok": False, "model": None}
-    return {"answer": f"Gemini is busy right now (error {code}). Please try again in a minute.",
-            "tool_calls": [], "ok": False, "model": None}
+
+            except Exception as e:
+                return {
+                    "answer": f"Gemini request failed: {type(e).__name__}. Please try again.",
+                    "tool_calls": [],
+                    "ok": False,
+                    "model": model,
+                }
+
+    return {
+        "answer": f"Gemini is temporarily unavailable (error {last_code}). Please try again.",
+        "tool_calls": [],
+        "ok": False,
+        "model": None,
+    }
