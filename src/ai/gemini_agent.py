@@ -10,7 +10,7 @@ from google.genai import errors, types
 from src.ai import tools
 
 load_dotenv()
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 # Optional backup model(s), separated by ';'. Used only when the main model keeps failing with a busy error.
 FALLBACK_MODELS = [m.strip() for m in re.split(r"[;,]", os.getenv("GEMINI_FALLBACK_MODEL", "")) if m.strip()]
 RETRY_CODES = {429, 500, 503, 504}
