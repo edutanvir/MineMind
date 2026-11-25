@@ -82,6 +82,41 @@ def load_source_manifest():
 
 
 # --------------------------------------------------
+# DATABASE INITIALIZATION
+# --------------------------------------------------
+
+@st.cache_resource
+def initialize_database():
+    """Create the DuckDB database and register Gold views on startup."""
+    con = get_duckdb_connection(read_only=False)
+
+    try:
+        required_tables = [
+            "dim_mine_feature",
+            "fact_mineral_production_monthly",
+            "source_manifest",
+            "etl_run_log",
+        ]
+
+        for table in required_tables:
+            count = con.execute(
+                f"SELECT COUNT(*) FROM {table}"
+            ).fetchone()[0]
+
+            if count == 0:
+                raise RuntimeError(
+                    f"Gold dataset '{table}' is missing or empty."
+                )
+
+        return True
+
+    finally:
+        con.close()
+
+
+initialize_database()
+
+# --------------------------------------------------
 # LOAD DATA
 # --------------------------------------------------
 
