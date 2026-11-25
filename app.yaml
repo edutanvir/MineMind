@@ -1,2 +1,5 @@
-
 command: ['streamlit', 'run', 'app.py']
+
+env:
+  - name: GEMINI_API_KEY
+    valueFrom: gemini-key
