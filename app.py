@@ -177,34 +177,89 @@ province_options = sorted(
     ) - aggregate_geographies
 )
 
+
+def get_commodity_options(province):
+    if province == "All Provinces":
+        province_mines_data = mines
+        province_production_data = production
+    else:
+        province_mines_data = mines[
+            mines["province"] == province
+        ]
+        province_production_data = production[
+            production["geography"] == province
+        ]
+
+    return sorted(
+        set(province_mines_data["commodity_normalized"].dropna().unique())
+        | set(province_production_data["commodity"].dropna().unique())
+    )
+
+
+def reset_commodity_filter():
+    province = st.session_state["global_province"]
+    st.session_state["global_commodities"] = get_commodity_options(province)
+
+
 selected_province = st.sidebar.selectbox(
     "Select Province / Territory",
     options=["All Provinces"] + province_options,
     index=0,
     key="global_province",
+    on_change=reset_commodity_filter,
 )
 
 
-commodity_options = sorted(
-    set(mines["commodity_normalized"].dropna().unique())
-    | set(production["commodity"].dropna().unique())
+# Filter source data by selected province first
+
+if selected_province == "All Provinces":
+    province_mines = mines.copy()
+    province_production = production.copy()
+else:
+    province_mines = mines[
+        mines["province"] == selected_province
+    ].copy()
+
+    province_production = production[
+        production["geography"] == selected_province
+    ].copy()
+
+
+# Build commodity options from province-filtered data
+
+commodity_options = get_commodity_options(selected_province)
+
+# Initialize or reconcile existing widget selection
+if "global_commodities" not in st.session_state:
+    st.session_state["global_commodities"] = commodity_options
+else:
+    st.session_state["global_commodities"] = [
+        c for c in st.session_state["global_commodities"]
+        if c in commodity_options
+    ]
+
+
+# Commodity slicer
+
+selected_commodities = st.sidebar.multiselect(
+    "Commodity",
+    options=commodity_options,
+    key="global_commodities",
 )
+
+
+# Production measure slicer
 
 measure_options = sorted(
     production["measure"].dropna().unique()
 )
 
+# Date range slicer
+
 month_options = sorted(
     production["reference_month"].dropna().unique()
 )
 
-# Commodity slicer
-selected_commodities = st.sidebar.multiselect(
-    "Commodity",
-    options=commodity_options,
-    default=commodity_options,
-    key="global_commodities",
-)
 
 # Production measure slicer
 selected_measures = st.sidebar.multiselect(
@@ -226,18 +281,6 @@ selected_months = st.sidebar.select_slider(
 # --------------------------------------------------
 # APPLY GLOBAL FILTERS
 # --------------------------------------------------
-
-if selected_province == "All Provinces":
-    province_mines = mines.copy()
-    province_production = production.copy()
-else:
-    province_mines = mines[
-        mines["province"] == selected_province
-    ].copy()
-
-    province_production = production[
-        production["geography"] == selected_province
-    ].copy()
 
 # Apply commodity selection
 filtered_mines = province_mines[
