@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 
+from src.cloud import history
 from src.database.duckdb_manager import get_duckdb_connection
 from src.ui.theme import inject_css
 
@@ -85,3 +86,15 @@ st.markdown(
     "- Every answer shows the tools called and the datasets used. If no tool was called, the page says so.\n"
     "- The app makes no claims about pollution, health risk or mine safety."
 )
+
+st.subheader("Privacy")
+if history.enabled():
+    st.markdown(
+        "- Signing in with Google is **optional**. If you sign in, your email address and the questions you ask "
+        "(with the answers and the names of the tools used) are stored in Cloud Firestore so you can find them again.\n"
+        "- You can delete all of your saved questions at any time from the Ask MineMind sidebar.\n"
+        "- Without signing in, nothing about you or your questions is stored by the app."
+    )
+else:
+    st.markdown("- This deployment has no accounts. The app does not store your questions or any personal data.")
+st.caption("Google Cloud Run keeps standard request logs (Cloud Logging) for this service.")

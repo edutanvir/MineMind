@@ -24,7 +24,7 @@ The two datasets are shown side by side but are **not joined at mine level**: pr
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # then add your own GEMINI_API_KEY and GEMINI_MODEL
+cp .env.example .env          # then add your own GEMINI_API_KEY and GEMINI_MODEL (optional GEMINI_FALLBACK_MODEL)
 python -m src.pipeline        # optional: rebuild Bronze -> Silver -> Gold (needs the raw files in data/raw/)
 streamlit run app.py
 pytest
@@ -47,22 +47,26 @@ The Gold Parquet files in `data/processed/gold/` are committed so the app runs w
 3. `bash scripts/deploy_cloud_run.sh`
 
 The script enables the APIs, stores the Gemini key in Secret Manager, deploys from the `Dockerfile`, and prints the URL.
-The key is never baked into the image. To delete everything afterwards: `gcloud run services delete minemind --region northamerica-northeast2`.
+The key is never baked into the image. Application logs and request logs go to Cloud Logging automatically.
+To delete everything afterwards: `gcloud run services delete minemind --region northamerica-northeast2`.
+
+### Optional: Google sign-in and saved questions
+The public demo works without signing in. With accounts enabled, a visitor can sign in with Google and the Ask page
+saves their questions (question, answer and tool names only) in Cloud Firestore, with a delete button.
+1. Deploy once without accounts and note the service URL.
+2. In the Google Cloud console create an OAuth consent screen (External, add yourself as a test user) and a Web OAuth client with redirect URIs
+   `http://localhost:8501/oauth2callback` and `https://YOUR_CLOUD_RUN_URL/oauth2callback`.
+3. Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.cloud.toml` and fill it in (never commit it).
+4. `ENABLE_ACCOUNTS=1 bash scripts/deploy_cloud_run.sh` - enables Firestore, creates the `(default)` database,
+   grants the service account `roles/datastore.user`, stores the auth file in Secret Manager and mounts it for Streamlit.
+
+### Roadmap (deliberately not in this version)
+BigQuery (the Gold tables are small enough for DuckDB), Cloud Storage and Cloud Scheduler with a Cloud Run Job
+(scheduled refresh of the Statistics Canada table), Cloud SQL, and Firebase Hosting / Cloud Functions
+(Streamlit is a server-rendered app, not a static front end).
 
 ## Project layout
 `app.py`, `pages/` (Streamlit) - `src/ingestion`, `src/transformation`, `src/database`, `src/analytics`, `src/ai`, `src/ui` - `scripts/` (Docker DB build, deploy) - `tests/`
 
 ## Known limitations
 Map 900A shows significant mapped features only. Statistics Canada values are provincial and may be revised. The commodity shown on the map is the first one listed in the source record.
-
-
----
-
-## Copyright and License
-
-Copyright © 2026 Md Tanvir Ahmed. All Rights Reserved.
-
-MineMind is proprietary software. Unauthorized copying, modification,
-redistribution, deployment, or commercial use is prohibited.
-
-See the [LICENSE](LICENSE) file for details.
