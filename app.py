@@ -129,7 +129,6 @@ except Exception as error:
     st.error(f"Unable to load Gold datasets: {error}")
     st.stop()
 
-
 # --------------------------------------------------
 # SIDEBAR
 # --------------------------------------------------
@@ -209,19 +208,34 @@ selected_province = st.sidebar.selectbox(
     on_change=reset_commodity_filter,
 )
 
-
-# Filter source data by selected province first
+# --------------------------------------------------
+# FILTER SOURCE DATA BY SELECTED PROVINCE
+# --------------------------------------------------
 
 if selected_province == "All Provinces":
+
     province_mines = mines.copy()
     province_production = production.copy()
+
 else:
+
+    # Normalize geography values to avoid whitespace/case mismatches
+    production_geography = (
+        production["geography"]
+        .astype("string")
+        .str.strip()
+        .str.casefold()
+    )
+
+    selected_geography = selected_province.strip().casefold()
+
     province_mines = mines[
-        mines["province"] == selected_province
+        mines["province"].astype("string").str.strip().str.casefold()
+        == selected_geography
     ].copy()
 
     province_production = production[
-        production["geography"] == selected_province
+        production_geography == selected_geography
     ].copy()
 
 
@@ -301,6 +315,7 @@ filtered_production = province_production[
         selected_months[1],
     )
 ].copy()
+
 
 # Recalculate production coverage
 production_summary = (
