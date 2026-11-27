@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 10" width="1280" height="10" role="presentation">
+<defs><clipPath id="c"><rect width="1280" height="10"/></clipPath></defs>
+<rect width="1280" height="10" fill="#1E2124"/>
+<g clip-path="url(#c)"><g>
+<polygon points="-50,0 -36,0 -42,10 -56,10" fill="#F4A81D"/>
+<polygon points="-22,0 -8,0 -14,10 -28,10" fill="#F4A81D"/>
+<polygon points="6,0 20,0 14,10 0,10" fill="#F4A81D"/>
+<polygon points="34,0 48,0 42,10 28,10" fill="#F4A81D"/>
+<polygon points="62,0 76,0 70,10 56,10" fill="#F4A81D"/>
+<polygon points="90,0 104,0 98,10 84,10" fill="#F4A81D"/>
+<polygon points="118,0 132,0 126,10 112,10" fill="#F4A81D"/>
+<polygon points="146,0 160,0 154,10 140,10" fill="#F4A81D"/>
+<polygon points="174,0 188,0 182,10 168,10" fill="#F4A81D"/>
+<polygon points="202,0 216,0 210,10 196,10" fill="#F4A81D"/>
+<polygon points="230,0 244,0 238,10 224,10" fill="#F4A81D"/>
+<polygon points="258,0 272,0 266,10 252,10" fill="#F4A81D"/>
+<polygon points="286,0 300,0 294,10 280,10" fill="#F4A81D"/>
+<polygon points="314,0 328,0 322,10 308,10" fill="#F4A81D"/>
+<polygon points="342,0 356,0 350,10 336,10" fill="#F4A81D"/>
+<polygon points="370,0 384,0 378,10 364,10" fill="#F4A81D"/>
+<polygon points="398,0 412,0 406,10 392,10" fill="#F4A81D"/>
+<polygon points="426,0 440,0 434,10 420,10" fill="#F4A81D"/>
+<polygon points="454,0 468,0 462,10 448,10" fill="#F4A81D"/>
+<polygon points="482,0 496,0 490,10 476,10" fill="#F4A81D"/>
+<polygon points="510,0 524,0 518,10 504,10" fill="#F4A81D"/>
+<polygon points="538,0 552,0 546,10 532,10" fill="#F4A81D"/>
+<polygon points="566,0 580,0 574,10 560,10" fill="#F4A81D"/>
+<polygon points="594,0 608,0 602,10 588,10" fill="#F4A81D"/>
+<polygon points="622,0 636,0 630,10 616,10" fill="#F4A81D"/>
+<polygon points="650,0 664,0 658,10 644,10" fill="#F4A81D"/>
+<polygon points="678,0 692,0 686,10 672,10" fill="#F4A81D"/>
+<polygon points="706,0 720,0 714,10 700,10" fill="#F4A81D"/>
+<polygon points="734,0 748,0 742,10 728,10" fill="#F4A81D"/>
+<polygon points="762,0 776,0 770,10 756,10" fill="#F4A81D"/>
+<polygon points="790,0 804,0 798,10 784,10" fill="#F4A81D"/>
+<polygon points="818,0 832,0 826,10 812,10" fill="#F4A81D"/>
+<polygon points="846,0 860,0 854,10 840,10" fill="#F4A81D"/>
+<polygon points="874,0 888,0 882,10 868,10" fill="#F4A81D"/>
+<polygon points="902,0 916,0 910,10 896,10" fill="#F4A81D"/>
+<polygon points="930,0 944,0 938,10 924,10" fill="#F4A81D"/>
+<polygon points="958,0 972,0 966,10 952,10" fill="#F4A81D"/>
+<polygon points="986,0 1000,0 994,10 980,10" fill="#F4A81D"/>
+<polygon points="1014,0 1028,0 1022,10 1008,10" fill="#F4A81D"/>
+<polygon points="1042,0 1056,0 1050,10 1036,10" fill="#F4A81D"/>
+<polygon points="1070,0 1084,0 1078,10 1064,10" fill="#F4A81D"/>
+<polygon points="1098,0 1112,0 1106,10 1092,10" fill="#F4A81D"/>
+<polygon points="1126,0 1140,0 1134,10 1120,10" fill="#F4A81D"/>
+<polygon points="1154,0 1168,0 1162,10 1148,10" fill="#F4A81D"/>
+<polygon points="1182,0 1196,0 1190,10 1176,10" fill="#F4A81D"/>
+<polygon points="1210,0 1224,0 1218,10 1204,10" fill="#F4A81D"/>
+<polygon points="1238,0 1252,0 1246,10 1232,10" fill="#F4A81D"/>
+<polygon points="1266,0 1280,0 1274,10 1260,10" fill="#F4A81D"/>
+<polygon points="1294,0 1308,0 1302,10 1288,10" fill="#F4A81D"/>
+<polygon points="1322,0 1336,0 1330,10 1316,10" fill="#F4A81D"/>
+<polygon points="1350,0 1364,0 1358,10 1344,10" fill="#F4A81D"/>
+<polygon points="1378,0 1392,0 1386,10 1372,10" fill="#F4A81D"/>
+<polygon points="1406,0 1420,0 1414,10 1400,10" fill="#F4A81D"/>
+<polygon points="1434,0 1448,0 1442,10 1428,10" fill="#F4A81D"/>
+<polygon points="1462,0 1476,0 1470,10 1456,10" fill="#F4A81D"/>
+<polygon points="1490,0 1504,0 1498,10 1484,10" fill="#F4A81D"/>
+<polygon points="1518,0 1532,0 1526,10 1512,10" fill="#F4A81D"/>
+<polygon points="1546,0 1560,0 1554,10 1540,10" fill="#F4A81D"/>
+<polygon points="1574,0 1588,0 1582,10 1568,10" fill="#F4A81D"/>
+<polygon points="1602,0 1616,0 1610,10 1596,10" fill="#F4A81D"/>
+<polygon points="1630,0 1644,0 1638,10 1624,10" fill="#F4A81D"/>
+<polygon points="1658,0 1672,0 1666,10 1652,10" fill="#F4A81D"/>
+<animateTransform attributeName="transform" type="translate" from="0 0" to="28 0" dur="1.6s" repeatCount="indefinite"/></g></g></svg>
