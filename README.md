@@ -17,7 +17,7 @@
 
 <p align="center">
 
-  <img alt="Gemini API" src="https://img.shields.io/badge/Gemini_API-Function_Calling-2457C5?style=flat-square">
+  <img alt="Gemini API" src="https://img.shields.io/badge/Google_Gemini-API-4285F4?style=flat-square">
   <img alt="DuckDB" src="https://img.shields.io/badge/DuckDB-Gold_Layer-F4A81D?style=flat-square&logo=duckdb&logoColor=black">
   <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-App-FF4B4B?style=flat-square&logo=streamlit&logoColor=white">
   <img alt="Databricks" src="https://img.shields.io/badge/Databricks-Apps_+_Secret_Scope-FF3621?style=flat-square&logo=databricks&logoColor=white">
