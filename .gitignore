@@ -1,19 +1,64 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
 # Environment variables and secrets
 .env
 .env.*
+!.env.example
 .streamlit/secrets.toml
+secrets.toml
+*.pem
+*.key
 
-# Python environment
-.venv/
-__pycache__/
-*.py[cod]
-
-# macOS
+# IDE and OS
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Raw source data
-data/raw/
+# Python testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
 
-# Local DuckDB databases
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local databases
 *.duckdb
 *.duckdb.wal
+
+# Raw downloaded datasets
+data/raw/
+*.gdb.zip
+
+# Local development/debugging outputs
+diagnose.py
+diagnose2.py
+test_gemini.py
+try_agent.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
