@@ -14,16 +14,18 @@
   -->
 </p>
 
+
 <p align="center">
-  <img alt="Gemini API" src="https://img.shields.io/badge/Gemini_API-function_calling-2457C5?style=flat-square&logo=googlegemini&logoColor=white">
-  <img alt="DuckDB" src="https://img.shields.io/badge/DuckDB-Gold_layer-F4A81D?style=flat-square&logo=duckdb&logoColor=black">
-  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-app-FF4B4B?style=flat-square&logo=streamlit&logoColor=white">
+  <img alt="Gemini API" src="https://img.shields.io/badge/Gemini_API-Function_Calling-2457C5?style=flat-square&logo=googlegemini&logoColor=white">
+  <img alt="DuckDB" src="https://img.shields.io/badge/DuckDB-Gold_Layer-F4A81D?style=flat-square&logo=duckdb&logoColor=black">
+  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-App-FF4B4B?style=flat-square&logo=streamlit&logoColor=white">
   <img alt="Databricks" src="https://img.shields.io/badge/Databricks-Apps_+_Secret_Scope-FF3621?style=flat-square&logo=databricks&logoColor=white">
   <img alt="Python" src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-Pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white">
 </p>
 
 <img src="docs/assets/divider.svg" width="100%" height="8" alt="">
+
 
 ## ⛏️ What is MineMind?
 
@@ -221,6 +223,40 @@ MineMind/
 
 ## 📄 Licence
 
-Code: see [`LICENSE`](LICENSE). Data: NRCan Map 900A under the [Open Government Licence – Canada](https://open.canada.ca/en/open-government-licence-canada); Statistics Canada Table 16-10-0019-01 under the [Statistics Canada Open Licence](https://www.statcan.gc.ca/en/terms-conditions/open-licence).
+
+---
+
+## Copyright, Ownership & Strict Proprietary License
+
+**Copyright © 2026 Md Tanvir Ahmed. All Rights Reserved.**
+
+MineMind is proprietary software and an independently developed project. All rights, title, and interest in the original source code, application architecture, implementation, documentation, designs, and other original project materials are expressly reserved by the copyright owner, except for third-party materials governed by their respective licenses.
+
+**NO PERMISSION IS GRANTED TO:**
+
+- Copy, reproduce, duplicate, or redistribute any portion of this repository.
+- Fork, clone, mirror, or republish this project or its source code.
+- Modify, adapt, translate, reverse engineer, or create derivative works.
+- Use this project, its source code, or its components for personal, educational, academic, research, or commercial purposes without prior written authorization.
+- Rebrand, present, distribute, or claim any part of this project as your own.
+- Deploy, host, sublicense, sell, or commercially exploit this software or its implementation.
+- Extract, reuse, or incorporate proprietary project materials into another application, product, or repository.
+
+**Unauthorized access, copying, reproduction, distribution, modification, or other use of protected materials is strictly prohibited.**
+
+Any individual or organization seeking permission to use, reproduce, modify, distribute, or otherwise utilize MineMind must obtain explicit prior written authorization from the copyright owner.
+
+Unauthorized use may result in appropriate legal action and claims for available remedies under applicable copyright and intellectual property laws.
+
+Viewing this public repository does not grant any license, ownership interest, permission, or other rights to use its proprietary materials.
+
+**This repository is published for demonstration and portfolio evaluation purposes only. Public visibility does not constitute permission to copy, reuse, distribute, or commercially exploit the project.**
+
+For licensing inquiries or written authorization, contact the copyright owner.
+
+See the [LICENSE](LICENSE) file for the full licensing terms.
+
+
+Data: NRCan Map 900A under the [Open Government Licence – Canada](https://open.canada.ca/en/open-government-licence-canada); Statistics Canada Table 16-10-0019-01 under the [Statistics Canada Open Licence](https://www.statcan.gc.ca/en/terms-conditions/open-licence).
 
 <p align="center"><sub>Built for Hack @ DevFest Sudbury 2026 · Gemini + Databricks</sub></p>
