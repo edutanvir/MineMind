@@ -15,23 +15,23 @@
 </p>
 
 <p align="center">
-  <a href="#">
-    <img alt="Gemini API" src="https://img.shields.io/badge/Google_Gemini-API-4285F4?style=for-the-badge&labelColor=4285F4&logo=googlegemini&logoColor=white" />
+  <a href="https://ai.google.dev/gemini-api/docs">
+    <img src="https://img.shields.io/badge/Gemini_API-Function_Calling-2457C5?style=flat" alt="Gemini API">
   </a>
-  <a href="#">
-    <img alt="DuckDB" src="https://img.shields.io/badge/DuckDB-Gold_Layer-F4A81D?style=for-the-badge&labelColor=F4A81D&logo=duckdb&logoColor=black" />
+  <a href="https://duckdb.org/">
+    <img src="https://img.shields.io/badge/DuckDB-Gold_Layer-F4A81D?style=flat&logo=duckdb&logoColor=black" alt="DuckDB">
   </a>
-  <a href="#">
-    <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
+  <a href="https://streamlit.io/">
+    <img src="https://img.shields.io/badge/Streamlit-Application-FF4B4B?style=flat&logo=streamlit&logoColor=white" alt="Streamlit">
   </a>
-  <a href="#">
-    <img alt="Databricks" src="https://img.shields.io/badge/Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white" />
+  <a href="https://docs.databricks.com/">
+    <img src="https://img.shields.io/badge/Databricks-Apps_+_Secret_Scope-FF3621?style=flat&logo=databricks&logoColor=white" alt="Databricks">
   </a>
-  <a href="#">
-    <img alt="Python" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <a href="https://www.python.org/">
+    <img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white" alt="Python">
   </a>
-  <a href="#">
-    <img alt="Tests" src="https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" />
+  <a href="https://docs.pytest.org/">
+    <img src="https://img.shields.io/badge/Tests-Pytest-0A9EDC?style=flat&logo=pytest&logoColor=white" alt="Pytest">
   </a>
 </p>
 
