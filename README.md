@@ -234,40 +234,16 @@ MineMind/
 
 ## 📄 Licence
 
-
 ---
 
 ## Copyright, Ownership & Strict Proprietary License
 
 **Copyright © 2026 Md Tanvir Ahmed. All Rights Reserved.**
 
-MineMind is proprietary software and an independently developed project. All rights, title, and interest in the original source code, application architecture, implementation, documentation, designs, and other original project materials are expressly reserved by the copyright owner, except for third-party materials governed by their respective licenses.
+MineMind is published for demonstration and portfolio evaluation. You are welcome to read the code, run it locally to evaluate it, and fork it on GitHub as GitHub's Terms of Service allow. Please ask for written permission before reusing the code in another project, redistributing it, hosting a copy, or using it commercially, and credit the author when you reference this work. Hack @ DevFest Sudbury organizers and judges may view, run and showcase the project for the event.
 
-**NO PERMISSION IS GRANTED TO:**
+Third-party libraries keep their own licences. Data: NRCan Map 900A under the [Open Government Licence – Canada](https://open.canada.ca/en/open-government-licence-canada); Statistics Canada Table 16-10-0019-01 under the [Statistics Canada Open Licence](https://www.statcan.gc.ca/en/terms-conditions/open-licence). Those licences cover the data, not this code.
 
-- Copy, reproduce, duplicate, or redistribute any portion of this repository.
-- Fork, clone, mirror, or republish this project or its source code.
-- Modify, adapt, translate, reverse engineer, or create derivative works.
-- Use this project, its source code, or its components for personal, educational, academic, research, or commercial purposes without prior written authorization.
-- Rebrand, present, distribute, or claim any part of this project as your own.
-- Deploy, host, sublicense, sell, or commercially exploit this software or its implementation.
-- Extract, reuse, or incorporate proprietary project materials into another application, product, or repository.
-
-**Unauthorized access, copying, reproduction, distribution, modification, or other use of protected materials is strictly prohibited.**
-
-Any individual or organization seeking permission to use, reproduce, modify, distribute, or otherwise utilize MineMind must obtain explicit prior written authorization from the copyright owner.
-
-Unauthorized use may result in appropriate legal action and claims for available remedies under applicable copyright and intellectual property laws.
-
-Viewing this public repository does not grant any license, ownership interest, permission, or other rights to use its proprietary materials.
-
-**This repository is published for demonstration and portfolio evaluation purposes only. Public visibility does not constitute permission to copy, reuse, distribute, or commercially exploit the project.**
-
-For licensing inquiries or written authorization, contact the copyright owner.
-
-See the [LICENSE](LICENSE) file for the full licensing terms.
-
-
-Data: NRCan Map 900A under the [Open Government Licence – Canada](https://open.canada.ca/en/open-government-licence-canada); Statistics Canada Table 16-10-0019-01 under the [Statistics Canada Open Licence](https://www.statcan.gc.ca/en/terms-conditions/open-licence).
+Full terms: [LICENSE](LICENSE). Permission requests: [LinkedIn](https://www.linkedin.com/in/tanvir-de).
 
 <p align="center"><sub>Built for Hack @ DevFest Sudbury 2026 · Gemini + Databricks</sub></p>
